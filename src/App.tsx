@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   BookOpen,
   User,
@@ -13,9 +13,68 @@ import {
   PenLine,
 } from 'lucide-react';
 
-// --- DATA SOAL (30 SOAL KERAJAAN HINDU-BUDDHA & ISLAM) ---
-const questionsData = [
-  // ===================== PG BIASA (1-15) =====================
+// ===================== TYPES =====================
+interface SingleQuestion {
+  id: number;
+  section: string;
+  type: 'single';
+  text: string;
+  options: string[];
+  answer: number;
+}
+
+interface MultipleQuestion {
+  id: number;
+  section: string;
+  type: 'multiple';
+  text: string;
+  options: string[];
+  answers: number[];
+}
+
+interface TFQuestion {
+  id: number;
+  section: string;
+  type: 'tf';
+  text: string;
+  statements: string[];
+  answers: string[];
+}
+
+interface EssayQuestion {
+  id: number;
+  section: string;
+  type: 'essay';
+  text: string;
+  rubric: string;
+}
+
+type Question = SingleQuestion | MultipleQuestion | TFQuestion | EssayQuestion;
+
+type AnswerValue = number | number[] | string[] | string | undefined;
+
+interface Answers {
+  [idx: number]: AnswerValue;
+}
+
+interface DetailItem {
+  id: number;
+  correct: boolean;
+  type: string;
+}
+
+interface ScoreData {
+  score: number;
+  correct: number;
+  total: number;
+  essayAnswered: number;
+  essayTotal: number;
+  detail: DetailItem[];
+}
+
+// ===================== DATA SOAL =====================
+const questionsData: Question[] = [
+  // ---------- PG BIASA (1-15) ----------
   {
     id: 1,
     section: 'Kerajaan Hindu-Buddha',
@@ -202,10 +261,10 @@ const questionsData = [
     id: 14,
     section: 'Kerajaan Islam',
     type: 'single',
-    text: 'Kerajaan Mataram Islam di bawah Sultan Agung (abad XVII M) berhasil memadukan unsur-unsur kebudayaan Islam dengan tradisi Jawa kuno, termasuk penanggalan Jawa (kalender Saka dimodifikasi menjadi kalender Jawa-Islam), dan upacara-upacara kraton yang bernuansa Islami namun tetap mempertahankan unsur Hindu-Buddha. Analisis paling tepat tentang warisan Mataram Islam dalam kehidupan masyarakat Jawa masa kini adalah ...',
+    text: "Kerajaan Mataram Islam di bawah Sultan Agung (abad XVII M) berhasil memadukan unsur-unsur kebudayaan Islam dengan tradisi Jawa kuno, termasuk penanggalan Jawa (kalender Saka dimodifikasi menjadi kalender Jawa-Islam), dan upacara-upacara kraton yang bernuansa Islami namun tetap mempertahankan unsur Hindu-Buddha. Analisis paling tepat tentang warisan Mataram Islam dalam kehidupan masyarakat Jawa masa kini adalah ...",
     options: [
       'Warisan Mataram Islam sudah sepenuhnya tergantikan oleh budaya global dan tidak lagi ditemukan dalam kehidupan sehari-hari',
-      'Sinkretisme budaya yang dikembangkan Mataram Islam menciptakan identitas budaya Jawa yang khas – perpaduan Islam, Hindu-Buddha, dan budaya lokal – yang masih hidup dalam tradisi, seni, dan upacara adat masyarakat Jawa masa kini',
+      "Sinkretisme budaya yang dikembangkan Mataram Islam menciptakan identitas budaya Jawa yang khas – perpaduan Islam, Hindu-Buddha, dan budaya lokal – yang masih hidup dalam tradisi, seni, dan upacara adat masyarakat Jawa masa kini",
       "Tradisi sinkretis Mataram Islam dianggap sebagai bentuk bid'ah yang harus dihapuskan dari kehidupan masyarakat Jawa",
       'Sultan Agung sengaja mencampuradukkan budaya untuk melemahkan ajaran Islam murni di Jawa',
       'Pengaruh Mataram Islam hanya dirasakan di lingkungan kraton dan tidak menyentuh kehidupan masyarakat biasa',
@@ -227,7 +286,7 @@ const questionsData = [
     answer: 1,
   },
 
-  // ===================== PG KOMPLEKS BENAR/SALAH (16-20) =====================
+  // ---------- PG KOMPLEKS BENAR/SALAH (16-20) ----------
   {
     id: 16,
     section: 'Kerajaan Hindu-Buddha',
@@ -299,7 +358,7 @@ const questionsData = [
     answers: ['Benar', 'Tidak Tepat', 'Benar', 'Tidak Tepat', 'Benar'],
   },
 
-  // ===================== PG KOMPLEKS CHECKBOX (21-25) =====================
+  // ---------- PG KOMPLEKS CHECKBOX (21-25) ----------
   {
     id: 21,
     section: 'Kerajaan Hindu-Buddha',
@@ -371,14 +430,14 @@ const questionsData = [
     answers: [0, 1, 3, 4],
   },
 
-  // ===================== ESSAY (26-30) =====================
+  // ---------- ESSAY (26-30) ----------
   {
     id: 26,
     section: 'Kerajaan Hindu-Buddha',
     type: 'essay',
     text: 'Bayangkan kamu adalah seorang peneliti muda yang ingin meneliti topik: "Seberapa besar pengaruh Kerajaan Sriwijaya terhadap kehidupan masyarakat di Sumatera Selatan masa kini?" Jelaskanlah: (1) jenis-jenis sumber sejarah apa saja yang akan kamu gunakan dan mengapa; (2) bagaimana kamu akan melakukan kritik sumber agar hasil penelitianmu dapat dipercaya; dan (3) tantangan apa yang kemungkinan kamu hadapi dalam penelitian ini beserta cara mengatasinya!',
     rubric:
-      'Jawaban mencakup: (1) Jenis sumber: primer (prasasti, artefak arkeologis, sumber asing/Tiongkok), sekunder (buku sejarah, jurnal ilmiah), sumber lisan; alasan penggunaan tiap jenis. (2) Kritik ekstern (keaslian fisik sumber) dan kritik intern (relevansi dan kredibilitas isi); triangulasi antar sumber. (3) Tantangan: keterbatasan sumber primer, bias sumber asing, kesulitan akses; solusi: kolaborasi dengan arkeolog, wawancara tokoh adat, studi perpustakaan dan museum.',
+      'Jawaban mencakup: (1) Jenis sumber: primer (prasasti, artefak arkeologis, sumber asing/Tiongkok), sekunder (buku sejarah, jurnal ilmiah), sumber lisan; alasan penggunaan tiap jenis. (2) Kritik ekstern dan kritik intern; triangulasi antar sumber. (3) Tantangan: keterbatasan sumber primer, bias sumber asing, kesulitan akses; solusi: kolaborasi dengan arkeolog, wawancara tokoh adat, studi perpustakaan dan museum.',
   },
   {
     id: 27,
@@ -386,7 +445,7 @@ const questionsData = [
     type: 'essay',
     text: 'Indonesia dikenal sebagai negara dengan keberagaman budaya, agama, dan tradisi yang luar biasa. Banyak kalangan menyebut keberagaman ini sebagai "kekuatan" sekaligus "tantangan" bagi persatuan bangsa. Berdasarkan proses akulturasi budaya yang berlangsung sejak masa kerajaan Hindu-Buddha hingga kerajaan Islam di Nusantara, tulislah esai yang menganalisis: (1) bagaimana proses akulturasi terjadi secara historis dengan contoh konkret; (2) nilai-nilai apa yang dapat dipetik dari proses tersebut; dan (3) bagaimana nilai-nilai ini relevan untuk menjawab tantangan keberagaman Indonesia di abad ke-21!',
     rubric:
-      'Jawaban mencakup: (1) Contoh akulturasi konkret: wayang sebagai media dakwah, arsitektur masjid bergaya lokal, kalender Jawa-Islam, seni ukir motif Islam pada candi; proses gradual bukan konfrontatif. (2) Nilai yang dipetik: toleransi, adaptasi tanpa kehilangan identitas, kreativitas budaya, inklusivitas. (3) Relevansi: fondasi Islam Nusantara yang toleran, dasar semboyan Bhinneka Tunggal Ika, model pengelolaan keberagaman; solusi terhadap radikalisme dan intoleransi.',
+      'Jawaban mencakup: (1) Contoh akulturasi konkret: wayang sebagai media dakwah, arsitektur masjid bergaya lokal, kalender Jawa-Islam. (2) Nilai: toleransi, adaptasi tanpa kehilangan identitas, kreativitas budaya, inklusivitas. (3) Relevansi: fondasi Islam Nusantara yang toleran, dasar Bhinneka Tunggal Ika, model pengelolaan keberagaman; solusi terhadap radikalisme.',
   },
   {
     id: 28,
@@ -394,7 +453,7 @@ const questionsData = [
     type: 'essay',
     text: 'Presiden Republik Indonesia pernah mencanangkan visi Indonesia sebagai "Poros Maritim Dunia." Visi ini sejatinya bukan tanpa akar historis. Tulislah sebuah esai argumentatif yang menjelaskan: (1) bukti-bukti historis kejayaan maritim Nusantara dari masa kerajaan Hindu-Buddha hingga kerajaan Islam; (2) bagaimana keterhubungan antara kejayaan maritim masa lampau tersebut dengan visi Indonesia sebagai Poros Maritim Dunia; dan (3) apa yang harus dilakukan Indonesia agar dapat mewujudkan visi tersebut dengan belajar dari pengalaman dan kegagalan sejarah kerajaan-kerajaan maritim Nusantara!',
     rubric:
-      'Jawaban mencakup: (1) Bukti historis: Sriwijaya menguasai Selat Malaka, armada Majapahit menjangkau Asia Tenggara, Aceh sebagai pusat perdagangan lada, Ternate-Tidore sebagai penghasil rempah global. (2) Keterhubungan: Indonesia secara geografis dan historis adalah negara maritim; pengalaman kerajaan membuktikan kemampuan mengelola jalur laut. (3) Langkah ke depan: pembangunan armada laut, pengelolaan SDA kelautan secara berdaulat, diplomasi maritim, pengembangan pelabuhan; belajar dari kegagalan.',
+      'Jawaban mencakup: (1) Bukti historis: Sriwijaya menguasai Selat Malaka, armada Majapahit, Aceh sebagai pusat lada, Ternate-Tidore. (2) Keterhubungan: Indonesia secara geografis dan historis adalah negara maritim. (3) Langkah ke depan: pembangunan armada laut, pengelolaan SDA kelautan, diplomasi maritim; belajar dari kegagalan.',
   },
   {
     id: 29,
@@ -402,7 +461,7 @@ const questionsData = [
     type: 'essay',
     text: 'Dalam buku teks sejarah nasional, kisah kerajaan-kerajaan besar seperti Majapahit dan Sriwijaya mendapat porsi besar. Namun, ratusan kerajaan kecil di berbagai pelosok Nusantara sering luput dari perhatian. Seorang sejarawan berkata: "Tanpa mengenal sejarah daerahnya sendiri, seorang warga negara tidak akan pernah benar-benar memahami identitas bangsanya." Evaluasilah pernyataan tersebut! Dalam jawaban Anda, jelaskan: (1) mengapa penelitian sejarah lokal penting bagi identitas nasional; (2) bagaimana keterhubungan antara sejarah lokal dan sejarah nasional; dan (3) apa yang bisa Anda lakukan sebagai pelajar untuk berkontribusi dalam pelestarian sejarah lokal di daerah Anda!',
     rubric:
-      'Jawaban mencakup: (1) Pentingnya sejarah lokal: memperkaya narasi nasional, mencegah Jawasentrisme, menumbuhkan kebanggaan dan identitas daerah, melestarikan warisan intangible. (2) Keterhubungan: sejarah nasional adalah kumpulan sejarah lokal; tanpa sejarah lokal gambaran nasional tidak lengkap. (3) Kontribusi pelajar: wawancara tokoh adat, dokumentasi tradisi lisan, kunjungan situs sejarah, proyek penelitian mini, aktif di komunitas budaya; menggunakan media digital untuk diseminasi.',
+      'Jawaban mencakup: (1) Pentingnya sejarah lokal: memperkaya narasi nasional, mencegah Jawasentrisme, menumbuhkan identitas daerah. (2) Keterhubungan: sejarah nasional adalah kumpulan sejarah lokal. (3) Kontribusi pelajar: wawancara tokoh adat, dokumentasi tradisi lisan, kunjungan situs sejarah, proyek penelitian mini, media digital.',
   },
   {
     id: 30,
@@ -410,37 +469,29 @@ const questionsData = [
     type: 'essay',
     text: 'Seorang filsuf berkata: "Bangsa yang melupakan sejarahnya adalah bangsa yang berjalan tanpa peta." Dengan menggunakan minimal TIGA peristiwa atau fenomena penting dari masa kerajaan Hindu-Buddha dan/atau kerajaan Islam di Nusantara, tulislah sebuah refleksi kritis yang menjawab pertanyaan: "Apa yang bisa dipelajari dari sejarah kerajaan-kerajaan Nusantara untuk mempersiapkan Indonesia menghadapi tantangan abad ke-21?" Refleksi Anda harus mencakup dimensi lokal, nasional, dan global, serta menunjukkan keterhubungan yang jelas antara masa lampau, masa kini, dan masa yang akan datang!',
     rubric:
-      'Kriteria: (1) Menyebut minimal 3 peristiwa/fenomena spesifik dari masa kerajaan dengan benar. (2) Menghubungkan tiap peristiwa tersebut dengan kondisi kini secara logis (dimensi lokal: warisan budaya daerah; nasional: persatuan, maritim, keberagaman; global: diplomasi, perdagangan). (3) Proyeksi ke masa depan: visi Indonesia yang terinspirasi dari nilai-nilai historis (toleransi, maritim, diplomasi, multikulturalisme). (4) Argumen orisinal yang menunjukkan kemampuan berpikir kritis dan kreatif. (5) Penulisan yang runtut, koheren, dan didukung fakta sejarah.',
+      'Kriteria: (1) Minimal 3 peristiwa spesifik dari masa kerajaan. (2) Hubungkan tiap peristiwa dengan kondisi kini (lokal, nasional, global). (3) Proyeksi ke masa depan: toleransi, maritim, diplomasi, multikulturalisme. (4) Argumen orisinal dan berpikir kritis. (5) Penulisan runtut, koheren, didukung fakta sejarah.',
   },
 ];
 
+// ===================== COMPONENT =====================
 export default function App() {
-  const [step, setStep] = useState('intro'); // 'intro', 'quiz', 'result'
-  const [student, setStudent] = useState({
-    name: '',
-    nis: '',
-    kelas: 'X MIPA 1',
-  });
+  const [step, setStep] = useState<'intro' | 'quiz' | 'result'>('intro');
+  const [student, setStudent] = useState({ name: '', nis: '', kelas: 'X MIPA 1' });
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [scoreData, setScoreData] = useState(null);
-  const [activeQuestions, setActiveQuestions] = useState([]);
+  const [answers, setAnswers] = useState<Answers>({});
+  const [scoreData, setScoreData] = useState<ScoreData | null>(null);
+  const [activeQuestions, setActiveQuestions] = useState<Question[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
-
-  // State untuk pengiriman ke Google Sheet
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  // --- MASUKKAN URL GOOGLE APPS SCRIPT DI SINI ---
   const GOOGLE_SHEET_URL =
     'https://script.google.com/macros/s/AKfycbw4BsaRGEKDhLitVhXWxH05KSPMJRQAegRvMm363pRWGwwq6oP-VhvPa_lIy-GC7Kr97A/exec';
 
-  // Helper untuk mendapatkan abjad pilihan ganda
-  const getLabel = (idx) => String.fromCharCode(65 + idx);
+  const getLabel = (idx: number) => String.fromCharCode(65 + idx);
 
-  // Fungsi untuk mengacak urutan array (algoritma Fisher-Yates)
-  const shuffleArray = (array) => {
+  const shuffleArray = <T,>(array: T[]): T[] => {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -449,24 +500,20 @@ export default function App() {
     return shuffled;
   };
 
-  const handleStart = (e) => {
+  const handleStart = (e: React.FormEvent) => {
     e.preventDefault();
     if (student.name && student.nis) {
       setErrorMsg('');
-      // Pisahkan soal berdasarkan tipe agar urutan tipe tetap terjaga
       const pgBiasa = questionsData.filter((q) => q.type === 'single');
       const pgTF = questionsData.filter((q) => q.type === 'tf');
       const pgCheckbox = questionsData.filter((q) => q.type === 'multiple');
       const essay = questionsData.filter((q) => q.type === 'essay');
-
-      // Acak dalam masing-masing kelompok lalu gabungkan
       const randomSoal = [
         ...shuffleArray(pgBiasa),
         ...shuffleArray(pgTF),
         ...shuffleArray(pgCheckbox),
         ...essay,
       ];
-
       setActiveQuestions(randomSoal);
       setStep('quiz');
       window.scrollTo(0, 0);
@@ -475,13 +522,13 @@ export default function App() {
     }
   };
 
-  const handleAnswerSingle = (optIdx) => {
+  const handleAnswerSingle = (optIdx: number) => {
     setAnswers({ ...answers, [currentIdx]: optIdx });
   };
 
-  const handleAnswerMultiple = (optIdx) => {
-    const currentAns = answers[currentIdx] || [];
-    let newAns;
+  const handleAnswerMultiple = (optIdx: number) => {
+    const currentAns = (answers[currentIdx] as number[]) || [];
+    let newAns: number[];
     if (currentAns.includes(optIdx)) {
       newAns = currentAns.filter((i) => i !== optIdx);
     } else {
@@ -490,44 +537,45 @@ export default function App() {
     setAnswers({ ...answers, [currentIdx]: newAns });
   };
 
-  const handleAnswerTF = (statementIdx, value) => {
-    const currentAns = answers[currentIdx] || [];
+  const handleAnswerTF = (statementIdx: number, value: string) => {
+    const currentAns = (answers[currentIdx] as string[]) || [];
     const newAns = [...currentAns];
     newAns[statementIdx] = value;
     setAnswers({ ...answers, [currentIdx]: newAns });
   };
 
-  const handleAnswerEssay = (text) => {
+  const handleAnswerEssay = (text: string) => {
     setAnswers({ ...answers, [currentIdx]: text });
   };
 
   const calculateScore = () => {
     let correctCount = 0;
     let essayCount = 0;
-    let detail = [];
+    const detail: DetailItem[] = [];
 
     activeQuestions.forEach((q, idx) => {
       const userAns = answers[idx];
-      let isCorrect = false;
 
       if (q.type === 'essay') {
         essayCount++;
-        // Essay dianggap dikerjakan jika ada jawaban
-        isCorrect = userAns && userAns.trim().length > 0;
-        detail.push({ id: q.id, correct: isCorrect, type: 'essay' });
+        const isDone = typeof userAns === 'string' && userAns.trim().length > 0;
+        detail.push({ id: q.id, correct: isDone, type: 'essay' });
         return;
       }
 
+      let isCorrect = false;
       if (userAns !== undefined) {
         if (q.type === 'single') {
           isCorrect = userAns === q.answer;
         } else if (q.type === 'multiple') {
-          if (Array.isArray(userAns) && userAns.length === q.answers.length) {
-            isCorrect = q.answers.every((a) => userAns.includes(a));
+          const ua = userAns as number[];
+          if (Array.isArray(ua) && ua.length === q.answers.length) {
+            isCorrect = q.answers.every((a) => ua.includes(a));
           }
         } else if (q.type === 'tf') {
-          if (Array.isArray(userAns)) {
-            isCorrect = q.answers.every((a, i) => userAns[i] === a);
+          const ua = userAns as string[];
+          if (Array.isArray(ua)) {
+            isCorrect = q.answers.every((a, i) => ua[i] === a);
           }
         }
       }
@@ -538,12 +586,8 @@ export default function App() {
 
     const objectiveTotal = activeQuestions.length - essayCount;
     const finalScore =
-      objectiveTotal > 0
-        ? Math.round((correctCount / objectiveTotal) * 100)
-        : 0;
-    const essayAnswered = detail.filter(
-      (d) => d.type === 'essay' && d.correct
-    ).length;
+      objectiveTotal > 0 ? Math.round((correctCount / objectiveTotal) * 100) : 0;
+    const essayAnswered = detail.filter((d) => d.type === 'essay' && d.correct).length;
 
     setScoreData({
       score: finalScore,
@@ -558,35 +602,21 @@ export default function App() {
   };
 
   const submitToSpreadsheet = async () => {
-    if (GOOGLE_SHEET_URL === 'MASUKKAN_URL_APPS_SCRIPT_ANDA_DISINI') {
-      alert(
-        'Tautan Google Sheet belum diatur oleh Guru. Anda masih dapat mengunduh CSV cadangan.'
-      );
-      return;
-    }
-
+    if (!scoreData) return;
     setIsSubmitting(true);
-
     const formData = new FormData();
     formData.append('nama', student.name);
     formData.append('nis', student.nis);
     formData.append('kelas', student.kelas);
-    formData.append('skor', scoreData.score);
-    formData.append('benar', scoreData.correct);
-    formData.append('salah', scoreData.total - scoreData.correct);
-    formData.append('essay_dijawab', scoreData.essayAnswered);
-
+    formData.append('skor', String(scoreData.score));
+    formData.append('benar', String(scoreData.correct));
+    formData.append('salah', String(scoreData.total - scoreData.correct));
+    formData.append('essay_dijawab', String(scoreData.essayAnswered));
     try {
-      await fetch(GOOGLE_SHEET_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: formData,
-      });
+      await fetch(GOOGLE_SHEET_URL, { method: 'POST', mode: 'no-cors', body: formData });
       setSubmitSuccess(true);
     } catch (error) {
-      alert(
-        'Terjadi kesalahan saat mengirim. Silakan unduh CSV sebagai cadangan.'
-      );
+      alert('Terjadi kesalahan saat mengirim. Silakan unduh CSV sebagai cadangan.');
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -594,67 +624,44 @@ export default function App() {
   };
 
   const generateCSV = () => {
+    if (!scoreData) return;
     let csvContent = 'data:text/csv;charset=utf-8,';
     csvContent += 'SEKOLAH,SMA N 8 DUMAI\n';
     csvContent += 'MATA PELAJARAN,SEJARAH KELAS X (Hindu-Buddha & Islam)\n';
     csvContent += 'TANGGAL,' + new Date().toLocaleDateString('id-ID') + '\n\n';
-
-    csvContent +=
-      'NAMA SISWA,NIS,KELAS,SKOR OBJEKTIF,BENAR,SALAH,ESSAY DIJAWAB\n';
-    csvContent += `"${student.name}","${student.nis}","${student.kelas}",${
-      scoreData.score
-    },${scoreData.correct},${scoreData.total - scoreData.correct},${
-      scoreData.essayAnswered
-    }/${scoreData.essayTotal}\n\n`;
-
-    csvContent += 'NO SOAL (ID),TIPE,STATUS JAWABAN\n';
+    csvContent += 'NAMA SISWA,NIS,KELAS,SKOR OBJEKTIF,BENAR,SALAH,ESSAY DIJAWAB\n';
+    csvContent += `"${student.name}","${student.nis}","${student.kelas}",${scoreData.score},${scoreData.correct},${scoreData.total - scoreData.correct},${scoreData.essayAnswered}/${scoreData.essayTotal}\n\n`;
+    csvContent += 'NO SOAL (ID),TIPE,STATUS\n';
     scoreData.detail.forEach((item) => {
       const tipe =
-        item.type === 'essay'
-          ? 'Essay'
-          : item.type === 'tf'
-          ? 'B/S'
-          : item.type === 'multiple'
-          ? 'Checkbox'
-          : 'PG';
+        item.type === 'essay' ? 'Essay' : item.type === 'tf' ? 'B/S' : item.type === 'multiple' ? 'Checkbox' : 'PG';
       const status =
-        item.type === 'essay'
-          ? item.correct
-            ? 'Dijawab'
-            : 'Kosong'
-          : item.correct
-          ? 'Benar'
-          : 'Salah';
+        item.type === 'essay' ? (item.correct ? 'Dijawab' : 'Kosong') : item.correct ? 'Benar' : 'Salah';
       csvContent += `${item.id},${tipe},${status}\n`;
     });
-
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
     link.setAttribute(
       'download',
-      `Nilai_Sejarah_X_${student.kelas.replace(
-        / /g,
-        '_'
-      )}_${student.name.replace(/ /g, '_')}.csv`
+      `Nilai_Sejarah_X_${student.kelas.replace(/ /g, '_')}_${student.name.replace(/ /g, '_')}.csv`
     );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  // Badge tipe soal
-  const getTypeBadge = (type) => {
-    const map = {
+  const getTypeBadge = (type: string): { label: string; color: string } => {
+    const map: Record<string, { label: string; color: string }> = {
       single: { label: 'PG Biasa', color: 'bg-blue-100 text-blue-700' },
       tf: { label: 'Benar / Salah', color: 'bg-amber-100 text-amber-700' },
       multiple: { label: 'Checkbox', color: 'bg-purple-100 text-purple-700' },
       essay: { label: 'Essay', color: 'bg-rose-100 text-rose-700' },
     };
-    return map[type] || { label: type, color: 'bg-slate-100 text-slate-700' };
+    return map[type] ?? { label: type, color: 'bg-slate-100 text-slate-700' };
   };
 
-  // --- VIEW: INTRO ---
+  // ---- INTRO ----
   if (step === 'intro') {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
@@ -665,51 +672,33 @@ export default function App() {
               alt="Logo SMAN 8 Dumai"
               className="w-24 h-24 object-contain mb-3 drop-shadow-md bg-white rounded-full p-2"
               onError={(e) => {
-                e.target.onerror = null;
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'block';
+                const t = e.target as HTMLImageElement;
+                t.style.display = 'none';
+                const sib = t.nextSibling as HTMLElement | null;
+                if (sib) sib.style.display = 'block';
               }}
             />
             <BookOpen className="w-12 h-12 text-white mx-auto mb-3 hidden" />
-            <h1 className="text-2xl font-bold text-white">
-              Soal Sejarah Kelas X
-            </h1>
+            <h1 className="text-2xl font-bold text-white">Kuis Sejarah Kelas X</h1>
+            <p className="text-green-100 mt-1">Kerajaan Hindu-Buddha & Islam</p>
           </div>
 
           <div className="p-6">
             <div className="text-center mb-4">
-              <h2 className="text-lg font-bold text-slate-800">
-                SMA N 8 DUMAI
-              </h2>
+              <h2 className="text-lg font-bold text-slate-800">SMA N 8 DUMAI</h2>
               <div className="inline-block mt-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
                 Tahun Ajaran 2025/2026
               </div>
             </div>
 
-            {/* Info soal */}
             <div className="grid grid-cols-2 gap-2 mb-5 text-xs text-center">
               {[
-                {
-                  label: '15 PG Biasa',
-                  color: 'bg-blue-50 text-blue-700 border-blue-200',
-                },
-                {
-                  label: '5 Benar/Salah',
-                  color: 'bg-amber-50 text-amber-700 border-amber-200',
-                },
-                {
-                  label: '5 Checkbox',
-                  color: 'bg-purple-50 text-purple-700 border-purple-200',
-                },
-                {
-                  label: '5 Essay',
-                  color: 'bg-rose-50 text-rose-700 border-rose-200',
-                },
+                { label: '15 PG Biasa', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+                { label: '5 Benar/Salah', color: 'bg-amber-50 text-amber-700 border-amber-200' },
+                { label: '5 Checkbox', color: 'bg-purple-50 text-purple-700 border-purple-200' },
+                { label: '5 Essay', color: 'bg-rose-50 text-rose-700 border-rose-200' },
               ].map((item) => (
-                <div
-                  key={item.label}
-                  className={`border rounded-lg py-2 px-1 font-semibold ${item.color}`}
-                >
+                <div key={item.label} className={`border rounded-lg py-2 px-1 font-semibold ${item.color}`}>
                   {item.label}
                 </div>
               ))}
@@ -723,9 +712,7 @@ export default function App() {
 
             <form onSubmit={handleStart} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Nama Lengkap
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap</label>
                 <div className="relative">
                   <User className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
                   <input
@@ -734,16 +721,12 @@ export default function App() {
                     className="pl-10 w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
                     placeholder="Masukkan nama Anda"
                     value={student.name}
-                    onChange={(e) =>
-                      setStudent({ ...student, name: e.target.value })
-                    }
+                    onChange={(e) => setStudent({ ...student, name: e.target.value })}
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  NIS (Nomor Induk Siswa)
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">NIS (Nomor Induk Siswa)</label>
                 <div className="relative">
                   <GraduationCap className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
                   <input
@@ -752,28 +735,33 @@ export default function App() {
                     className="pl-10 w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
                     placeholder="Contoh: 2100123"
                     value={student.nis}
-                    onChange={(e) =>
-                      setStudent({ ...student, nis: e.target.value })
-                    }
+                    onChange={(e) => setStudent({ ...student, nis: e.target.value })}
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Kelas
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Kelas</label>
                 <select
                   className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none bg-white"
                   value={student.kelas}
-                  onChange={(e) =>
-                    setStudent({ ...student, kelas: e.target.value })
-                  }
+                  onChange={(e) => setStudent({ ...student, kelas: e.target.value })}
                 >
-                  <option>X 1</option>
-                  <option>X 2</option>
+                  <optgroup label="Kelas X">
+                    <option>X MIPA 1</option>
+                    <option>X MIPA 2</option>
+                    <option>X MIPA 3</option>
+                    <option>X IPS 1</option>
+                    <option>X IPS 2</option>
+                  </optgroup>
+                  <optgroup label="Kelas XI">
+                    <option>XI MIPA 1</option>
+                    <option>XI MIPA 2</option>
+                    <option>XI MIPA 3</option>
+                    <option>XI IPS 1</option>
+                    <option>XI IPS 2</option>
+                  </optgroup>
                 </select>
               </div>
-
               <button
                 type="submit"
                 className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center gap-2"
@@ -787,7 +775,7 @@ export default function App() {
     );
   }
 
-  // --- VIEW: QUIZ ---
+  // ---- QUIZ ----
   if (step === 'quiz') {
     const q = activeQuestions[currentIdx];
     const isLast = currentIdx === activeQuestions.length - 1;
@@ -795,7 +783,6 @@ export default function App() {
 
     return (
       <div className="min-h-screen bg-slate-50 font-sans pb-20">
-        {/* Header / Nav */}
         <div className="bg-white shadow-sm sticky top-0 z-10">
           <div className="max-w-3xl mx-auto px-4 py-4 flex justify-between items-center">
             <div>
@@ -810,27 +797,21 @@ export default function App() {
               </div>
             </div>
           </div>
-          {/* Progress Bar */}
           <div className="w-full bg-slate-100 h-1.5">
             <div
               className="bg-green-600 h-1.5 transition-all duration-300"
-              style={{
-                width: `${((currentIdx + 1) / activeQuestions.length) * 100}%`,
-              }}
-            ></div>
+              style={{ width: `${((currentIdx + 1) / activeQuestions.length) * 100}%` }}
+            />
           </div>
         </div>
 
-        {/* Question Container */}
         <div className="max-w-3xl mx-auto px-4 mt-8">
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
             <div className="flex gap-2 flex-wrap mb-2">
               <span className="text-sm font-bold text-green-600 bg-green-50 inline-block px-3 py-1 rounded-md">
                 {q.section}
               </span>
-              <span
-                className={`text-sm font-bold inline-block px-3 py-1 rounded-md ${typeBadge.color}`}
-              >
+              <span className={`text-sm font-bold inline-block px-3 py-1 rounded-md ${typeBadge.color}`}>
                 {typeBadge.label}
               </span>
             </div>
@@ -838,7 +819,6 @@ export default function App() {
               {currentIdx + 1}. {q.text}
             </h3>
 
-            {/* Render Options based on Type */}
             <div className="space-y-3">
               {/* PG BIASA */}
               {q.type === 'single' &&
@@ -846,61 +826,47 @@ export default function App() {
                   <button
                     key={i}
                     onClick={() => handleAnswerSingle(i)}
-                    className={`w-full text-left p-4 rounded-lg border-2 transition-all flex gap-3
-                    ${
+                    className={`w-full text-left p-4 rounded-lg border-2 transition-all flex gap-3 ${
                       answers[currentIdx] === i
                         ? 'border-green-500 bg-green-50'
                         : 'border-slate-200 hover:border-green-300 hover:bg-slate-50'
-                    }
-                  `}
+                    }`}
                   >
-                    <span
-                      className={`font-bold shrink-0 ${
-                        answers[currentIdx] === i
-                          ? 'text-green-600'
-                          : 'text-slate-500'
-                      }`}
-                    >
+                    <span className={`font-bold shrink-0 ${answers[currentIdx] === i ? 'text-green-600' : 'text-slate-500'}`}>
                       {getLabel(i)}.
                     </span>
                     <span className="text-slate-700">{opt}</span>
                   </button>
                 ))}
 
-              {/* CHECKBOX (Multiple) */}
+              {/* CHECKBOX */}
               {q.type === 'multiple' && (
                 <>
                   <div className="text-sm text-purple-700 font-medium mb-2 flex items-center gap-1 bg-purple-50 px-3 py-2 rounded-lg">
-                    <CheckCircle2 className="w-4 h-4 shrink-0" />{' '}
-                    <i>
-                      Centang semua jawaban yang benar (bisa lebih dari satu).
-                    </i>
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <i>Centang semua jawaban yang benar (bisa lebih dari satu).</i>
                   </div>
                   {q.options.map((opt, i) => {
-                    const isChecked = (answers[currentIdx] || []).includes(i);
+                    const checked = ((answers[currentIdx] as number[]) || []).includes(i);
                     return (
                       <label
                         key={i}
-                        className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all
-                        ${
-                          isChecked
+                        className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                          checked
                             ? 'border-purple-500 bg-purple-50'
                             : 'border-slate-200 hover:border-purple-300 hover:bg-slate-50'
-                        }
-                      `}
+                        }`}
                       >
                         <div className="mt-0.5 shrink-0">
                           <input
                             type="checkbox"
                             className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
-                            checked={isChecked}
+                            checked={checked}
                             onChange={() => handleAnswerMultiple(i)}
                           />
                         </div>
                         <span className="text-slate-700 leading-tight">
-                          <span className="font-bold text-slate-500 mr-1">
-                            {getLabel(i)}.
-                          </span>
+                          <span className="font-bold text-slate-500 mr-1">{getLabel(i)}.</span>
                           {opt}
                         </span>
                       </label>
@@ -909,33 +875,22 @@ export default function App() {
                 </>
               )}
 
-              {/* BENAR/SALAH (TF) */}
+              {/* BENAR/SALAH */}
               {q.type === 'tf' && (
                 <div className="overflow-x-auto border border-slate-200 rounded-lg">
                   <table className="w-full text-left border-collapse min-w-[500px]">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200">
-                        <th className="p-3 font-semibold text-slate-700 w-3/5">
-                          Pernyataan
-                        </th>
-                        <th className="p-3 font-semibold text-slate-700 text-center w-1/5">
-                          Benar
-                        </th>
-                        <th className="p-3 font-semibold text-slate-700 text-center w-1/5">
-                          Salah
-                        </th>
+                        <th className="p-3 font-semibold text-slate-700 w-3/5">Pernyataan</th>
+                        <th className="p-3 font-semibold text-slate-700 text-center w-1/5">Benar</th>
+                        <th className="p-3 font-semibold text-slate-700 text-center w-1/5">Salah</th>
                       </tr>
                     </thead>
                     <tbody>
                       {q.statements.map((stmt, i) => (
-                        <tr
-                          key={i}
-                          className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50"
-                        >
+                        <tr key={i} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50">
                           <td className="p-3 text-slate-700">
-                            <span className="font-semibold text-slate-500 mr-1">
-                              {i + 1}.
-                            </span>
+                            <span className="font-semibold text-slate-500 mr-1">{i + 1}.</span>
                             {stmt}
                           </td>
                           <td className="p-3 text-center">
@@ -943,9 +898,7 @@ export default function App() {
                               type="radio"
                               name={`q${currentIdx}_s${i}`}
                               className="w-5 h-5 text-green-600 focus:ring-green-500"
-                              checked={
-                                (answers[currentIdx] || [])[i] === 'Benar'
-                              }
+                              checked={((answers[currentIdx] as string[]) || [])[i] === 'Benar'}
                               onChange={() => handleAnswerTF(i, 'Benar')}
                             />
                           </td>
@@ -954,9 +907,7 @@ export default function App() {
                               type="radio"
                               name={`q${currentIdx}_s${i}`}
                               className="w-5 h-5 text-red-500 focus:ring-red-500"
-                              checked={
-                                (answers[currentIdx] || [])[i] === 'Tidak Tepat'
-                              }
+                              checked={((answers[currentIdx] as string[]) || [])[i] === 'Tidak Tepat'}
                               onChange={() => handleAnswerTF(i, 'Tidak Tepat')}
                             />
                           </td>
@@ -971,41 +922,33 @@ export default function App() {
               {q.type === 'essay' && (
                 <>
                   <div className="text-sm text-rose-700 font-medium mb-2 flex items-center gap-1 bg-rose-50 px-3 py-2 rounded-lg">
-                    <PenLine className="w-4 h-4 shrink-0" />{' '}
-                    <i>
-                      Tulis jawaban Anda secara lengkap dan terstruktur di bawah
-                      ini.
-                    </i>
+                    <PenLine className="w-4 h-4 shrink-0" />
+                    <i>Tulis jawaban Anda secara lengkap dan terstruktur di bawah ini.</i>
                   </div>
                   <textarea
                     className="w-full min-h-[200px] p-4 border-2 border-slate-200 rounded-lg focus:border-rose-400 focus:ring-2 focus:ring-rose-200 outline-none transition-all text-slate-700 leading-relaxed resize-y"
                     placeholder="Tuliskan jawaban esai Anda di sini..."
-                    value={answers[currentIdx] || ''}
+                    value={(answers[currentIdx] as string) || ''}
                     onChange={(e) => handleAnswerEssay(e.target.value)}
                   />
                   <div className="text-xs text-slate-400 text-right mt-1">
-                    {(answers[currentIdx] || '').length} karakter
+                    {((answers[currentIdx] as string) || '').length} karakter
                   </div>
                 </>
               )}
             </div>
           </div>
 
-          {/* Navigation Buttons */}
+          {/* Navigasi */}
           <div className="flex justify-between items-center mt-6">
             <button
-              onClick={() => {
-                setCurrentIdx(Math.max(0, currentIdx - 1));
-                window.scrollTo(0, 0);
-              }}
+              onClick={() => { setCurrentIdx(Math.max(0, currentIdx - 1)); window.scrollTo(0, 0); }}
               disabled={currentIdx === 0}
-              className={`flex items-center gap-2 px-5 py-3 rounded-lg font-medium transition-colors
-                ${
-                  currentIdx === 0
-                    ? 'text-slate-400 bg-slate-200 cursor-not-allowed'
-                    : 'text-slate-700 bg-white border border-slate-300 hover:bg-slate-50'
-                }
-              `}
+              className={`flex items-center gap-2 px-5 py-3 rounded-lg font-medium transition-colors ${
+                currentIdx === 0
+                  ? 'text-slate-400 bg-slate-200 cursor-not-allowed'
+                  : 'text-slate-700 bg-white border border-slate-300 hover:bg-slate-50'
+              }`}
             >
               <ChevronLeft className="w-5 h-5" /> Sebelumnya
             </button>
@@ -1019,12 +962,7 @@ export default function App() {
               </button>
             ) : (
               <button
-                onClick={() => {
-                  setCurrentIdx(
-                    Math.min(activeQuestions.length - 1, currentIdx + 1)
-                  );
-                  window.scrollTo(0, 0);
-                }}
+                onClick={() => { setCurrentIdx(Math.min(activeQuestions.length - 1, currentIdx + 1)); window.scrollTo(0, 0); }}
                 className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-white bg-green-600 hover:bg-green-700 shadow-md transition-colors"
               >
                 Selanjutnya <ChevronRight className="w-5 h-5" />
@@ -1040,12 +978,9 @@ export default function App() {
               <div className="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-2">
-                Selesaikan Kuis?
-              </h3>
+              <h3 className="text-xl font-bold text-slate-800 mb-2">Selesaikan Kuis?</h3>
               <p className="text-slate-600 mb-6 text-sm">
-                Apakah Anda yakin ingin menyelesaikan kuis ini? Pastikan semua
-                soal telah terjawab, termasuk soal essay.
+                Apakah Anda yakin ingin menyelesaikan kuis ini? Pastikan semua soal telah terjawab, termasuk soal essay.
               </p>
               <div className="flex gap-3 justify-center">
                 <button
@@ -1055,10 +990,7 @@ export default function App() {
                   Batal
                 </button>
                 <button
-                  onClick={() => {
-                    setShowConfirm(false);
-                    calculateScore();
-                  }}
+                  onClick={() => { setShowConfirm(false); calculateScore(); }}
                   className="flex-1 py-3 rounded-lg font-bold text-white bg-green-600 hover:bg-green-700 transition-colors"
                 >
                   Ya, Selesai
@@ -1071,116 +1003,80 @@ export default function App() {
     );
   }
 
-  // --- VIEW: RESULT ---
-  if (step === 'result') {
+  // ---- RESULT ----
+  if (step === 'result' && scoreData) {
     return (
       <div className="min-h-screen bg-slate-50 p-4 py-10 font-sans">
         <div className="max-w-2xl mx-auto">
-          {/* Result Card */}
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 mb-8 text-center">
             <div className="bg-green-600 p-8 text-white relative">
               <Award className="w-16 h-16 mx-auto mb-4 opacity-90" />
               <h1 className="text-3xl font-bold mb-2">Kuis Selesai!</h1>
-              <p className="text-green-100 text-lg">
-                Berikut adalah hasil pekerjaan Anda.
-              </p>
-
-              <svg
-                className="absolute -bottom-1 left-0 w-full"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 1440 320"
-              >
-                <path
-                  fill="#ffffff"
-                  fillOpacity="1"
-                  d="M0,128L48,138.7C96,149,192,171,288,170.7C384,171,480,149,576,144C672,139,768,149,864,170.7C960,192,1056,224,1152,224C1248,224,1344,192,1392,176L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
-                ></path>
+              <p className="text-green-100 text-lg">Berikut adalah hasil pekerjaan Anda.</p>
+              <svg className="absolute -bottom-1 left-0 w-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+                <path fill="#ffffff" fillOpacity="1" d="M0,128L48,138.7C96,149,192,171,288,170.7C384,171,480,149,576,144C672,139,768,149,864,170.7C960,192,1056,224,1152,224C1248,224,1344,192,1392,176L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" />
               </svg>
             </div>
 
             <div className="p-8 pt-4">
               <div className="grid grid-cols-2 gap-4 mb-8 text-left">
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <div className="text-sm text-slate-500 font-medium">
-                    Siswa
-                  </div>
+                  <div className="text-sm text-slate-500 font-medium">Siswa</div>
                   <div className="font-bold text-slate-800">{student.name}</div>
                   <div className="text-sm text-slate-600">{student.nis}</div>
                 </div>
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <div className="text-sm text-slate-500 font-medium">
-                    Kelas
-                  </div>
-                  <div className="font-bold text-slate-800">
-                    {student.kelas}
-                  </div>
+                  <div className="text-sm text-slate-500 font-medium">Kelas</div>
+                  <div className="font-bold text-slate-800">{student.kelas}</div>
                   <div className="text-sm text-slate-600">SMA N 8 Dumai</div>
                 </div>
               </div>
 
-              {/* Skor Objektif */}
               <div className="flex justify-center items-center gap-12 mb-6">
                 <div className="text-center">
-                  <div className="text-6xl font-black text-green-600">
-                    {scoreData.score}
-                  </div>
-                  <div className="text-sm font-bold text-slate-400 mt-1 uppercase tracking-widest">
-                    Skor Objektif
-                  </div>
+                  <div className="text-6xl font-black text-green-600">{scoreData.score}</div>
+                  <div className="text-sm font-bold text-slate-400 mt-1 uppercase tracking-widest">Skor Objektif</div>
                 </div>
-                <div className="h-16 w-px bg-slate-200"></div>
+                <div className="h-16 w-px bg-slate-200" />
                 <div className="text-left space-y-2">
                   <div className="flex items-center gap-2 text-green-600 font-medium">
-                    <CheckCircle2 className="w-5 h-5" /> {scoreData.correct}{' '}
-                    Benar
+                    <CheckCircle2 className="w-5 h-5" /> {scoreData.correct} Benar
                   </div>
                   <div className="flex items-center gap-2 text-red-500 font-medium">
-                    <XCircle className="w-5 h-5" />{' '}
-                    {scoreData.total - scoreData.correct} Salah
+                    <XCircle className="w-5 h-5" /> {scoreData.total - scoreData.correct} Salah
                   </div>
                 </div>
               </div>
 
-              {/* Info Essay */}
               <div className="bg-rose-50 border border-rose-200 rounded-lg p-4 mb-6 flex items-center gap-3">
                 <PenLine className="w-6 h-6 text-rose-500 shrink-0" />
                 <div className="text-left text-sm text-rose-800">
-                  <span className="font-bold">Essay:</span>{' '}
-                  {scoreData.essayAnswered} dari {scoreData.essayTotal} soal
-                  dijawab. Nilai essay akan dinilai oleh guru secara terpisah.
+                  <span className="font-bold">Essay:</span> {scoreData.essayAnswered} dari {scoreData.essayTotal} soal dijawab. Nilai essay akan dinilai oleh guru secara terpisah.
                 </div>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-5 text-left flex gap-4 mb-6">
                 <Send className="w-8 h-8 text-blue-600 shrink-0 mt-1" />
                 <div>
-                  <h4 className="font-bold text-blue-900 text-sm">
-                    Kirim Nilai Otomatis
-                  </h4>
+                  <h4 className="font-bold text-blue-900 text-sm">Kirim Nilai Otomatis</h4>
                   <p className="text-blue-800 text-sm mt-1 mb-3">
-                    Klik tombol di bawah ini untuk mengirim hasil Anda langsung
-                    ke database Bapak/Ibu Guru.
+                    Klik tombol di bawah ini untuk mengirim hasil Anda langsung ke database Bapak/Ibu Guru.
                   </p>
-
                   {submitSuccess ? (
                     <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1.5 rounded-md text-sm font-bold border border-green-300">
-                      <CheckCircle2 className="w-4 h-4" /> Nilai Berhasil
-                      Terkirim!
+                      <CheckCircle2 className="w-4 h-4" /> Nilai Berhasil Terkirim!
                     </div>
                   ) : (
                     <button
                       onClick={submitToSpreadsheet}
                       disabled={isSubmitting}
-                      className={`inline-flex justify-center items-center gap-2 font-bold py-2 px-4 rounded-md transition-colors text-sm
-                        ${
-                          isSubmitting
-                            ? 'bg-blue-300 text-blue-800 cursor-not-allowed'
-                            : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm'
-                        }`}
+                      className={`inline-flex justify-center items-center gap-2 font-bold py-2 px-4 rounded-md transition-colors text-sm ${
+                        isSubmitting
+                          ? 'bg-blue-300 text-blue-800 cursor-not-allowed'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm'
+                      }`}
                     >
-                      {isSubmitting
-                        ? 'Mengirim Data...'
-                        : 'Kirim Nilai ke Guru Sekarang'}
+                      {isSubmitting ? 'Mengirim Data...' : 'Kirim Nilai ke Guru Sekarang'}
                     </button>
                   )}
                 </div>
