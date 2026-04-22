@@ -746,20 +746,8 @@ export default function App() {
                   value={student.kelas}
                   onChange={(e) => setStudent({ ...student, kelas: e.target.value })}
                 >
-                  <optgroup label="Kelas X">
-                    <option>X MIPA 1</option>
-                    <option>X MIPA 2</option>
-                    <option>X MIPA 3</option>
-                    <option>X IPS 1</option>
-                    <option>X IPS 2</option>
-                  </optgroup>
-                  <optgroup label="Kelas XI">
-                    <option>XI MIPA 1</option>
-                    <option>XI MIPA 2</option>
-                    <option>XI MIPA 3</option>
-                    <option>XI IPS 1</option>
-                    <option>XI IPS 2</option>
-                  </optgroup>
+                    <option>X 1</option>
+                    <option>X 2</option>
                 </select>
               </div>
               <button
